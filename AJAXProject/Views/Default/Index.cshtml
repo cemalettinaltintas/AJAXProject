@@ -1,0 +1,217 @@
+﻿@{
+    ViewData["Title"] = "Index";
+}
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<h3>Ürün İşlemleri (AJAX)</h3>
+<br />
+<br />
+
+<button type="button" class="btn btn-outline-primary" id="btnList">Ürün Listesi</button>
+
+<div class="alert alert-primary">
+    <h3>Ürün Listesi</h3>
+    <div id="productList"></div>
+</div>
+
+<br />
+<hr />
+
+<div class="alert alert-dark">
+    <h3>Ürün Ekleme Bölümü</h3>
+    <input type="text" id="txtName" class="form-control" placeholder="Ürün Adı" />
+    <br />
+    <input type="text" id="txtStock" class="form-control" placeholder="Stok Sayısı" />
+    <br />
+    <input type="text" id="txtPrice" class="form-control" placeholder="Fiyat" />
+    <br />
+    <button type="button" class="btn btn-outline-dark" id="btnCreate">Ürün Ekle</button>
+</div>
+
+<br />
+<hr />
+<div class="alert alert-danger">
+    <h3>Ürün Silme Bölümü</h3>
+    <input type="text" id="txtDeleteId" class="form-control" placeholder="Silinecek Ürün Id" />
+    <br />
+    <button type="button" class="btn btn-outline-danger" id="btnDelete">Ürün Sil</button>
+</div>
+
+<br />
+<hr />
+<div class="alert alert-success">
+    <h3>Id'ye Göre Ürün Getirme Bölümü</h3>
+    <input type="text" id="txtGetProduct" class="form-control" placeholder="Ürün Id" />
+    <br />
+    <button type="button" class="btn btn-outline-success" id="btnGetById">Ürün Getir</button>
+    <div id="getProduct">
+    </div>
+</div>
+
+<br />
+<hr />
+
+<div class="alert alert-info">
+    <h3>Ürün Güncelleme Bölümü</h3>
+    <input type="text" id="txtUpdateId" class="form-control" placeholder="Ürün Id" />
+    <br />
+    <input type="text" id="txtUpdateName" class="form-control" placeholder="Ürün Adı" />
+    <br />
+    <input type="text" id="txtUpdateStock" class="form-control" placeholder="Stok Sayısı" />
+    <br />
+    <input type="text" id="txtUpdatePrice" class="form-control" placeholder="Fiyat" />
+    <br />
+    <button type="button" class="btn btn-outline-info" id="btnUpdate">Ürün Güncelle</button>
+</div>
+
+<script>
+    $("#btnList").click(function () {
+        $.ajax({
+            contentType: "application/json",
+            dataType: "json",
+            type: "Get",
+            url: "/Default/ProductList",
+            success: function (func1) {
+                let values = jQuery.parseJSON(func1);
+                console.log(values);
+                let tablehtml = ` <table class='table table-bordered'
+                                                <tr>
+                                                <th>Ürün Id</th>
+                                                <th>Ürün Adı</th>
+                                                <th>Stok Sayısı</th>
+                                                <th>Fiyat</th>
+                                                </tr>`
+                $.each(values, (index, value) => {
+                    tablehtml += `
+                                     <tr>
+                                                    <td>${value.ProductId}</td>
+                                                    <td>${value.ProductName}</td>
+                                                    <td>${value.Stock}</td>
+                                                    <td>${value.Price}</td>
+                                                    </tr>
+
+
+                                `
+                });
+
+                tablehtml += `</table>`;
+                $("#productList").html(tablehtml);
+
+
+            }
+        });
+
+
+
+
+    });
+
+
+    $("#btnCreate").click(function () {
+        let productValues = {
+            ProductName: $("#txtName").val(),
+            Stock: $("#txtStock").val(),
+            Price: $("#txtPrice").val()
+
+        };
+
+        $.ajax({
+
+            type: "post",
+            url: "/Default/CreateProduct",
+            data: productValues,
+            success: function (func2) {
+                let result = jQuery.parseJSON(func2);
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Ürün başarıyla eklendi",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+
+                $("#btnList").click();
+
+            }
+        })
+
+    })
+
+    $("#btnDelete").click(function () {
+        let id = $("#txtDeleteId").val();
+
+        $.ajax({
+            url: "/Default/DeleteProduct/" + id,
+            type: "get",
+            contentType: "application/json",
+            success: function (func3) {
+                Swal.fire({
+                    position: "top-end",
+                    icon: "error",
+                    title: "Ürün başarıyla silindi",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                $("#btnList").click();
+            }
+        })
+    })
+    $("#btnGetById").click(function () {
+        let id = $("#txtGetProduct").val();
+
+        $.ajax({
+            contentType: "application/json",
+            dataType: "json",
+            url: "/Default/GetProductById/" + id,
+            success: function (func4) {
+                let result = jQuery.parseJSON(func4);
+                let htmlget = `
+                    <table class='table table-bordered'
+                        <tr>
+                        <th>Ürün Id</th>
+                        <th>Ürün Adı</th>
+                        <th>Ürün Stok</th>
+                        <th>Ürün Fiyat</th>
+                        </tr>
+
+                        <tr>
+                        <td>${result.ProductId}</td>
+                        <td>${result.ProductName}</td>
+                        <td>${result.Stock}</td>
+                        <td>${result.Price}</td>
+                        </tr>
+                    </table>
+                    `;
+                $("#getProduct").html(htmlget);
+            }
+        })
+    })
+    $("#btnUpdate").click(function () {
+        let productValues = {
+            ProductId: $("#txtUpdateId").val(),
+            ProductName: $("#txtUpdateName").val(),
+            Stock: $("#txtUpdateStock").val(),
+            Price: $("#txtUpdatePrice").val()
+        };
+        $.ajax({
+            type: "post",
+            url: "/Default/UpdateProduct",
+            data: productValues,
+            success: function (func5) {
+                //let result = jQuery.parseJSON(func5);
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Ürün başarıyla güncellendi",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+
+                $("#btnList").click();
+
+            }
+        })
+    })
+</script>
